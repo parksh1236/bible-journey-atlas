@@ -335,7 +335,7 @@ function init(hm) {
       // 인물 전환: 전체 여정을 위에서 보여 준 뒤 첫 장면으로 내려감
       cam.target.copy(overview.target); cam.dist = overview.dist * 1.35; cam.phi = .62; cam.theta = .12;
       flyTo({ ...overview, phi: .82, theta: .2 }, 1600);
-      setTimeout(() => { if (routeKey === key && activeIdx === step) { travelTo(step); focus(step, 1900); } }, reduced ? 0 : 1500);
+      setTimeout(() => { if (!evMode && routeKey === key && activeIdx === step) { travelTo(step); focus(step, 1900); } }, reduced ? 0 : 1500);
       lastPerson = person;
     } else if (step !== lastStep) {
       const far = Math.abs(stopU[step] - curU) > .25;
@@ -464,7 +464,7 @@ function init(hm) {
       pins.hidden = true; evPins.hidden = false; caption.hidden = true;
       const box = new THREE.Box3(); evItems.forEach(e => box.expandByPoint(e.v));
       const size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
-      flyTo({ target: new THREE.Vector3(center.x, 0, center.z + size.z * .05), dist: Math.max(size.x * 1.4, size.z * 1.7, 14) + 16, phi: .85, theta: cam.theta + .1 }, reduced ? 0 : 1600);
+      flyTo({ target: new THREE.Vector3(center.x, 0, center.z + size.z * .05), dist: Math.max(size.x * 1.8, size.z * 1.9, 14) + 18, phi: .85, theta: cam.theta + .1 }, reduced ? 0 : 1600);
       idleSince = performance.now();
     },
     focusEvent(i) {

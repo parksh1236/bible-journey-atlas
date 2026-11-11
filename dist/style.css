@@ -98,3 +98,106 @@ figure{overflow:hidden}figure img{transition:transform 1.2s cubic-bezier(.2,.8,.
 .event-card.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);animation:barIn .5s both;transform-origin:50% 0}
 @keyframes barIn{from{transform:scaleY(0)}}
 .m3-pin.nolabel .lbl{opacity:0}.m3-pin .lbl{transition:opacity .3s,font-size .3s}.m3-pin:hover .lbl,.m3-pin:focus-visible .lbl{opacity:1}
+
+/* ───────── 지도 보기 방식 전환 ───────── */
+.map-toolbar>span{display:flex;align-items:center}
+.map-mode{display:inline-flex;margin-left:10px;background:#f8f8f0df;border-radius:20px;padding:3px;border:1px solid #d4d8c9}
+.map-mode button{border:0!important;background:transparent!important;border-radius:16px!important;padding:5px 11px!important;font-size:10px!important;color:var(--ink)}
+.map-mode button[aria-pressed=true]{background:var(--ink)!important;color:#fff}
+.map-mode button:disabled{opacity:.35;cursor:not-allowed}
+.map-toolbar{flex-wrap:wrap;gap:8px}.map-toolbar>div:last-child{display:flex}
+.map-wrap.events-mode .map-legend{display:none}
+.m3-pin.evt .n{width:28px;height:28px;font-size:13px;background:#3f5a4c}
+.m3-pin.evt.battle .n{background:#8c4b3b}.m3-pin.evt.miracle .n{background:#b0803f}.m3-pin.evt.teaching .n{background:#4d6a8a}
+.m3-pin.evt .lbl{font-size:11px}
+.m3-pin.evt:hover .n{transform:scale(1.18)}
+.m3-pin.evt.active .n{transform:scale(1.35);box-shadow:0 0 0 5px #c08a5240,0 0 22px 4px #e7b37a90}
+
+/* ───────── 장소의 사건 섹션 ───────── */
+#place-events{padding:10px 0 30px}
+.ev-head{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;margin:6px 0 18px}
+.ev-head h2{font-size:29px;margin:10px 0}.ev-head p{font-size:12px;line-height:1.9;color:var(--muted);max-width:620px;margin:0}
+.ev-people{display:flex;gap:8px;flex-shrink:0}
+.ev-people button{display:grid;grid-template-columns:auto auto;column-gap:10px;align-items:center;text-align:left;border:1px solid var(--line);background:transparent;padding:10px 16px;border-radius:3px;transition:.2s}
+.ev-people button b{font-weight:500;font-size:14px}.ev-people button small{grid-row:2;font-size:8px;letter-spacing:1.6px;opacity:.6}.ev-people button em{grid-row:1/3;grid-column:2;font:italic 22px Georgia;color:var(--gold)}
+.ev-people button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.ev-kinds{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+.ev-kinds button{border:1px solid var(--line);border-radius:24px;background:transparent;font-size:11px;padding:7px 15px}
+.ev-kinds button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.ev-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.ev-card{text-align:left;border:1px solid var(--line);border-radius:5px;background:#fcfbf6;padding:0 0 14px;overflow:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.ev-card:hover{transform:translateY(-4px);box-shadow:0 16px 30px -18px #1f2e2588}
+.motion-on .ev-card{animation:cardIn .7s calc(var(--i)*55ms) cubic-bezier(.2,.8,.2,1) both}
+.ev-thumb{display:block;position:relative;aspect-ratio:16/9;background:linear-gradient(#5873bb,#f2c2ab);overflow:hidden}
+.ev-thumb canvas{width:100%;height:100%;display:block;transition:transform 1.4s cubic-bezier(.2,.8,.2,1)}
+.ev-card:hover .ev-thumb canvas{transform:scale(1.06)}
+.ev-play{position:absolute;left:50%;top:50%;translate:-50% -50%;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#fffaf0d0;color:var(--ink);font-size:13px;padding-left:3px;opacity:0;transform:scale(.8);transition:.3s;box-shadow:0 0 30px #fff8}
+.ev-card:hover .ev-play,.ev-card:focus-visible .ev-play{opacity:1;transform:none}
+.ev-meta{display:flex;justify-content:space-between;align-items:center;padding:12px 14px 0;font-size:10px}
+.ev-kind{color:var(--gold);font-weight:600}.ev-card.battle .ev-kind{color:#8c4b3b}.ev-card.teaching .ev-kind{color:#4d6a8a}
+.ev-place{color:var(--muted)}
+.ev-card>b{display:block;padding:6px 14px 0;font:600 15px/1.5 'Noto Serif KR',serif}
+.ev-card>small{display:block;padding:4px 14px 0;font-size:10px;color:var(--muted)}
+.ev-note{font-size:10px;color:var(--muted);line-height:1.8;margin-top:16px}
+@media(max-width:1100px){.ev-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:850px){.ev-grid{grid-template-columns:repeat(2,1fr)}.ev-head{flex-direction:column;align-items:flex-start}}
+@media(max-width:580px){.ev-grid{gap:9px}.ev-card>b{font-size:13px;padding:5px 10px 0}.ev-meta{padding:9px 10px 0;font-size:9px}.ev-card>small{padding:3px 10px 0;font-size:9px}.ev-head h2{font-size:23px}.map-mode{margin-left:6px}.map-mode button{padding:4px 8px!important}}
+
+/* ───────── 극장 (모션그래픽 재생) ───────── */
+.theater{width:min(1180px,96vw);max-width:none;max-height:96vh;padding:0;border:0;border-radius:8px;background:#0b0f1a;color:#fff;overflow:hidden;line-height:1.6}
+.theater::backdrop{background:#05080fe8;backdrop-filter:blur(4px)}
+.theater[open]{animation:thIn .6s cubic-bezier(.2,.8,.2,1)}
+@keyframes thIn{from{opacity:0;transform:scale(.96)}}
+.th-stage{position:relative;aspect-ratio:16/9;overflow:hidden;background:#0b0f1a}
+#th-canvas{width:100%;height:100%;display:block;cursor:pointer}
+.th-progress{position:absolute;top:14px;left:16px;right:16px;display:flex;gap:5px;z-index:2}
+.th-progress i{flex:1;height:3px;border-radius:2px;background:#ffffff40;overflow:hidden}
+.th-progress i b{display:block;height:100%;width:100%;background:#fff;transform:scaleX(0);transform-origin:0 50%}
+.th-progress i.done b{transform:none}
+.th-progress i.now b{animation:thBar var(--d) linear forwards}
+.th-progress.paused i.now b{animation-play-state:paused}
+@keyframes thBar{to{transform:scaleX(1)}}
+.th-titlecard{position:absolute;left:6%;top:14%;opacity:0;pointer-events:none;text-shadow:0 2px 24px #0008,0 0 2px #0006}
+.th-titlecard.show{opacity:1}
+.th-titlecard.anim .th-eyebrow{animation:fadeUp .9s .2s both}
+.th-titlecard.anim h3{animation:titleIn 1.4s .35s cubic-bezier(.2,.8,.2,1) both}
+.th-titlecard.anim span{animation:fadeUp .9s .8s both}
+.th-titlecard.show.anim{animation:titleOut .9s 4.6s forwards}
+@keyframes titleIn{from{opacity:0;letter-spacing:.35em;filter:blur(8px)}}
+@keyframes titleOut{to{opacity:0;transform:translateY(-10px)}}
+.th-eyebrow{font-size:12px;letter-spacing:3px;color:#ffe2b8}
+.th-titlecard h3{font:600 clamp(26px,4.4vw,52px)/1.3 'Noto Serif KR',serif;margin:10px 0 8px;letter-spacing:-.5px}
+.th-titlecard span{font-size:13px;color:#ffffffcc}
+.th-sub{position:absolute;left:8%;right:8%;bottom:7%;margin:0;text-align:center;font:500 clamp(14px,1.9vw,22px)/1.7 'Noto Serif KR',serif;color:#fff;text-shadow:0 0 3px #000b,0 2px 18px #000a;letter-spacing:.2px;pointer-events:none}
+.th-sub span{display:inline-block;white-space:pre}
+.th-sub.in span{animation:subIn .6s calc(var(--delay) + var(--k)*32ms) cubic-bezier(.2,.8,.2,1) both}
+@keyframes subIn{from{opacity:0;transform:translateY(8px);filter:blur(6px)}}
+.th-end{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:6% 10%;background:linear-gradient(90deg,#0b0f1af0,#0b0f1aa0 70%,#0b0f1a40);animation:fadeIn .8s both}
+.th-end[hidden]{display:none}
+.th-end .eyebrow{color:#ffd9a6}
+.th-end p{font:400 clamp(13px,1.6vw,17px)/2 'Noto Serif KR',serif;max-width:640px;margin:14px 0}
+.th-end small{color:#ffffffa0;font-size:11px;min-height:1em}
+.th-end-ref{display:flex;gap:18px;align-items:center;margin:16px 0;font-size:12px;color:#ffe2b8}
+.th-end-ref a{border-bottom:1px solid #ffe2b880}
+.th-end-actions{display:flex;gap:10px;flex-wrap:wrap}
+.th-end-actions button{border:1px solid #ffffff60;background:#ffffff14;color:#fff;border-radius:22px;padding:9px 18px;font-size:12px;transition:.2s}
+.th-end-actions button:hover{background:#fff;color:var(--ink)}
+.th-end-actions button[hidden]{display:none}
+.th-controls{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#0b0f1a;font-size:11px}
+.th-controls button{border:1px solid #ffffff30;background:transparent;color:#fff;border-radius:50%;width:34px;height:34px;font-size:12px}
+.th-controls button:disabled{opacity:.3}
+.th-controls #th-close{margin-left:auto;border-radius:18px;width:auto;padding:0 14px}
+.th-controls #th-count{font:italic 13px Georgia;color:#ffd9a6;margin-left:6px}
+.th-note{color:#ffffff70;font-size:10px;margin-left:8px}
+@media(max-width:580px){.theater{width:100vw;max-height:100vh;border-radius:0}.th-note{display:none}.th-titlecard{top:12%}.th-titlecard span{font-size:11px}.th-sub{left:4%;right:4%;bottom:5%}.th-end{padding:5% 6%}.th-end p{line-height:1.75;margin:8px 0}.th-end-ref{margin:8px 0}}
+.m3-caption[hidden]{display:none}
+@media(max-width:580px){
+  .theater{margin:0;inset:0;width:100%;height:100%;max-height:100%;border-radius:0;display:none;flex-direction:column;justify-content:center}
+  .theater[open]{display:flex}
+  .th-stage{aspect-ratio:auto}
+  #th-canvas{aspect-ratio:16/9;height:auto}
+  .th-titlecard{top:9%;left:5%}.th-titlecard h3{font-size:21px;margin:4px 0}.th-eyebrow{font-size:10px;letter-spacing:2px}
+  .th-sub{position:relative;left:auto;right:auto;bottom:auto;padding:14px 18px 6px;min-height:6.4em;font-size:15px;text-align:left}
+  .th-progress{top:8px;left:10px;right:10px}
+  .th-end{overflow:auto}
+}

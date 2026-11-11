@@ -64,7 +64,8 @@ function init(hm) {
   const pins = document.createElement('div'); pins.className = 'm3-pins'; pins.setAttribute('role', 'group'); pins.setAttribute('aria-label', '여정 장소 선택');
   const caption = document.createElement('div'); caption.className = 'm3-caption'; caption.setAttribute('aria-hidden', 'true');
   const hint = document.createElement('div'); hint.className = 'm3-hint'; hint.textContent = '드래그로 회전 · ⌘/Ctrl + 스크롤로 확대 · Shift + 드래그로 이동';
-  overlay.append(regions, pins, caption, hint);
+  const evPins = document.createElement('div'); evPins.className = 'm3-pins m3-evpins'; evPins.hidden = true; evPins.setAttribute('role', 'group'); evPins.setAttribute('aria-label', '장소별 사건 선택');
+  overlay.append(regions, pins, evPins, caption, hint);
   host.append(canvas, overlay);
   svgMap.after(host);
 
@@ -321,7 +322,10 @@ function init(hm) {
   }
   const gc = (a, b) => { const r = Math.PI / 180, dlat = (b[2] - a[2]) * r, dlon = (b[1] - a[1]) * r; const h = Math.sin(dlat / 2) ** 2 + Math.cos(a[2] * r) * Math.cos(b[2] * r) * Math.sin(dlon / 2) ** 2; return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h)); };
 
-  function render({ j, vis, step, person, dim, choose }) {
+  let evMode = false, evItems = [], evEls = [], evActive = -1, pendingRender = null;
+  function render(args) {
+    if (evMode) { pendingRender = args; return; }
+    const { j, vis, step, person, dim, choose } = args;
     onChoose = choose;
     const key = j.id;
     const visSet = new Set(vis.map(v => v.i));
@@ -384,15 +388,32 @@ function init(hm) {
         s.position.copy(curve.getPoint(THREE.MathUtils.clamp(curU - dir * (i + 1) * .0045, 0, .9999)));
         s.visible = moving;
       });
-      const a = stops3[activeIdx];
+      const a = evMode ? evItems[evActive] : stops3[activeIdx];
       if (a) {
-        beamOn += ((travel ? 0 : 1) - beamOn) * .06;
+        beamOn += ((travel && !evMode ? 0 : 1) - beamOn) * .06;
         beam.position.copy(a.v); beamMat.uniforms.uOpacity.value = beamOn; beamMat.uniforms.uTime.value = t;
         rings.forEach((r, i) => {
           const ph = ((t * .55 + i * .5) % 1);
           r.position.set(a.v.x, a.v.y + .06, a.v.z); r.scale.setScalar(.4 + ph * 2.6); r.material.opacity = (1 - ph) * .8 * beamOn;
         });
       }
+      if (evMode) {
+        // 사건 핀: 겹치는 라벨 숨김
+        const placed = [], icons = [];
+        evEls.map((b, i) => i).sort((x, y) => (y === evActive) - (x === evActive)).forEach(i => {
+          const b = evEls[i], z = project(evItems[i].v, b, 1.1);
+          b.style.zIndex = i === evActive ? 999 : Math.round((1 - z) * 500);
+          let sx = (v3.x + 1) / 2 * canvas.clientWidth, sy = (1 - v3.y) / 2 * canvas.clientHeight;
+          // 같은 지역에 몰린 핀은 나선형으로 살짝 벌려 놓아 누를 수 있게 함
+          let k = 0, ox = 0, oy = 0;
+          while (k < 14 && icons.some(p => Math.hypot(p[0] - sx - ox, p[1] - sy - oy) < 30)) { k++; const ang = k * 2.4, rr = 20 + k * 5; ox = Math.cos(ang) * rr; oy = Math.sin(ang) * rr; }
+          if (k) { sx += ox; sy += oy; b.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px)`; }
+          icons.push([sx, sy]);
+          const clash = placed.some(p => Math.abs(p[0] - sx) < 110 && Math.abs(p[1] - sy) < 20);
+          b.classList.toggle('nolabel', clash && i !== evActive);
+          if (!clash) placed.push([sx, sy]);
+        });
+      } else {
       // 화면에서 가까이 겹치는 라벨은 숨김 (선택된 장소 라벨이 우선)
       const placed = [];
       const order = pinEls.map((b, i) => i).sort((x, y) => (y === activeIdx) - (x === activeIdx));
@@ -404,6 +425,7 @@ function init(hm) {
         b.classList.toggle('nolabel', clash && i !== activeIdx);
         if (!clash && !b.classList.contains('dim')) placed.push([sx, sy]);
       });
+      }
     }
     waterMat.uniforms.uTime.value = t;
     regionEls.forEach(r => { project(r.v, r.e); });
@@ -425,6 +447,37 @@ function init(hm) {
 
   return {
     render, _cam: cam,
+    // 장소별 사건 모드: 여정 경로를 숨기고 사건 핀을 표시
+    showEvents(list, onPick) {
+      evMode = true; evActive = -1;
+      evItems = list.map(e => { const [x, z] = world(e.lon, e.lat); return { ...e, v: new THREE.Vector3(x, groundAt(e.lon, e.lat), z) }; });
+      const icon = { battle: '⚔', miracle: '✦', teaching: '❝' };
+      evPins.replaceChildren();
+      evEls = evItems.map((e, i) => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'm3-pin evt ' + e.kind;
+        b.innerHTML = `<span class="n">${icon[e.kind] || '•'}</span><span class="lbl">${e.place} · ${e.title}</span>`;
+        b.setAttribute('aria-label', `${e.place}: ${e.title} — 모션그래픽 보기`);
+        b.onclick = () => onPick(i);
+        evPins.append(b); return b;
+      });
+      [routeTube, routeLine, traveler, ...trail, ...stems].forEach(o => { if (o) o.visible = false; });
+      pins.hidden = true; evPins.hidden = false; caption.hidden = true;
+      const box = new THREE.Box3(); evItems.forEach(e => box.expandByPoint(e.v));
+      const size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+      flyTo({ target: new THREE.Vector3(center.x, 0, center.z + size.z * .05), dist: Math.max(size.x * 1.4, size.z * 1.7, 14) + 16, phi: .85, theta: cam.theta + .1 }, reduced ? 0 : 1600);
+      idleSince = performance.now();
+    },
+    focusEvent(i) {
+      evActive = i; const e = evItems[i]; if (!e) return;
+      evEls.forEach((b, k) => { b.classList.toggle('active', k === i); b.setAttribute('aria-pressed', k === i); });
+      flyTo({ target: e.v.clone().setY(e.v.y * .5), dist: 20, phi: .88 }, reduced ? 0 : 1400); idleSince = performance.now();
+    },
+    hideEvents() {
+      if (!evMode) return; evMode = false; evActive = -1;
+      [routeTube, routeLine, traveler, ...stems].forEach(o => { if (o) o.visible = true; });
+      pins.hidden = false; evPins.hidden = true; caption.hidden = false;
+      if (pendingRender) { const a = pendingRender; pendingRender = null; lastStep = -1; render(a); } else if (stops3.length) focus(activeIdx, 1400);
+    },
     zoom(f) { zoom = THREE.MathUtils.clamp(zoom * f, .4, 3); flyTo({ dist: THREE.MathUtils.clamp(cam.dist / f, 8, 220) }, 500); idleSince = performance.now(); },
     reset() { zoom = 1; if (overview) flyTo({ ...overview, phi: .82, theta: .2 }, 1400); idleSince = performance.now(); },
   };

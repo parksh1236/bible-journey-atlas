@@ -32,11 +32,22 @@ python3 -m http.server 8000 --directory dist
 | `dist/index.html` | 페이지 구조 |
 | `dist/style.css` | 디자인·반응형 레이아웃·모션 |
 | `dist/data.js` | 인물과 이동 지점, 사건 요약 |
-| `dist/app.js` | 지도·필터·여정 재생 |
+| `dist/app.js` | 지도·필터·여정 재생 (WebGL이 없으면 평면 SVG 지도) |
+| `dist/map3d.js` | 3D 지형 지도: 실제 고도 위 경로 아치, 카메라 비행, 이동하는 빛, 장면 캡션 |
+| `dist/motion.js` | 스크롤 등장·장면 전환·숫자 카운트업 등 모션 그래픽 |
+| `dist/vendor/three.module.min.js` | Three.js r160 (MIT) |
+| `dist/assets/terrain.png` | 3D 지형용 고도·바다 마스크 (`tools/build_terrain.py`로 생성) |
 | `dist/details.js` | 지역 배경·사건 상세·이미지 메타데이터 |
 | `dist/details-ui.js` | 상세 화면·이미지 확대·거리 계산 |
 | `dist/assets/` | 사진·미술·위성 영상 |
 | `CREDITS.md` | 이미지별 출처와 이용 조건 |
+
+## 3D 지도 조작
+
+- 드래그: 회전 · Shift+드래그(또는 오른쪽 드래그): 이동 · ⌘/Ctrl+스크롤 또는 두 손가락: 확대·축소
+- 지형 높이는 실제보다 과장해 표시하며, 해안선은 현대 고도 자료 기준입니다.
+- `prefers-reduced-motion`을 켠 사용자에게는 카메라 비행과 애니메이션을 생략합니다.
+- 지형 데이터를 다시 만들려면 `python3 tools/build_terrain.py` (numpy·Pillow 필요)
 
 ## 자료를 읽을 때
 

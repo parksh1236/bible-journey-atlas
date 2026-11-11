@@ -511,3 +511,13 @@ Moïse adoucissant les eaux de Marah - Poussin - BaltimoreMA.jpg
 - 지도 서비스: https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9
 - 이용 조건: https://www.esri.com/en-us/legal/terms/full-master-agreement
 - 영상은 실시간이 아니며 성경 사건의 위치를 확정하지 않습니다.
+
+## assets/terrain.png (3D 지형 고도 자료)
+
+- 출처: Terrain Tiles on AWS Open Data (Mapzen terrarium 인코딩) — https://registry.opendata.aws/terrain-tiles/
+- 원자료: SRTM, GMTED, ETOPO1 등 (USGS·NASA·NOAA 공공 자료 포함). 자세한 귀속 표기: https://github.com/tilezen/joerd/blob/master/docs/attribution.md
+- `tools/build_terrain.py`로 범위를 잘라 등장방형 격자로 재표본하고 바다·호수 마스크를 추가했습니다.
+
+## vendor/three.module.min.js
+
+- Three.js r160 · MIT License · https://github.com/mrdoob/three.js

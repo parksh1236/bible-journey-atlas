@@ -201,3 +201,4 @@ figure{overflow:hidden}figure img{transition:transform 1.2s cubic-bezier(.2,.8,.
   .th-progress{top:8px;left:10px;right:10px}
   .th-end{overflow:auto}
 }
+.ev-people{flex-wrap:wrap}@media(max-width:580px){.ev-people button{padding:8px 11px}.ev-people button b{font-size:12px}.ev-people button em{font-size:18px}}

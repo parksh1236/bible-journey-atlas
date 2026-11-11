@@ -4,11 +4,12 @@
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const KIND = { battle: '전투', miracle: '이적', teaching: '말씀' };
   const ICON = { battle: '⚔', miracle: '✦', teaching: '❝' };
-  const PEOPLE = [['joshua', '여호수아', 'JOSHUA'], ['jesus', '예수님', 'JESUS']];
+  // 장소 사건이 있는 인물만, 여정 순서대로
+  const PEOPLE = (typeof journeys !== 'undefined' ? journeys : []).filter(j => placeEvents[j.id]).map(j => [j.id, j.name, j.en]);
   const BIBLE = 'https://www.bskorea.or.kr/bible/korbibReadpage.php';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  let who = 'joshua', kindFilter = 'all', mapMode = 'route';
+  let who = PEOPLE[0] ? PEOPLE[0][0] : 'joshua', kindFilter = 'all', mapMode = 'route';
   const list = () => (placeEvents[who] || []);
   const shown = () => list().filter(e => kindFilter === 'all' || e.kind === kindFilter);
 
@@ -153,7 +154,7 @@
   $('th-close').onclick = () => dlg.close();
   $('th-replay').onclick = () => { go(0); setPaused(false); };
   $('th-next-ev').onclick = () => open(evIdx + 1);
-  dlg.addEventListener('close', () => { cancelAnimationFrame(raf); });
+  dlg.addEventListener('close', () => { if (!dlg.open) cancelAnimationFrame(raf); }); // 닫힘 이벤트는 늦게 오므로, 그 사이 다시 열렸으면 그대로 둠
   dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
   dlg.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight') { e.preventDefault(); go(beat + 1); }

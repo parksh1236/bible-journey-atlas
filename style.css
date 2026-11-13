@@ -202,3 +202,18 @@ figure{overflow:hidden}figure img{transition:transform 1.2s cubic-bezier(.2,.8,.
   .th-end{overflow:auto}
 }
 .ev-people{flex-wrap:wrap}@media(max-width:580px){.ev-people button{padding:8px 11px}.ev-people button b{font-size:12px}.ev-people button em{font-size:18px}}
+/* 1-bit 디더 스타일: 화면 전체를 잉크·종이 두 색으로 */
+.theater.dither,.theater.dither .th-stage,.theater.dither .th-controls{background:#16161a}
+.theater.dither #th-canvas{image-rendering:pixelated}
+.theater.dither .th-titlecard,.theater.dither .th-sub{text-shadow:none;color:#e9e6d6}
+.theater.dither .th-titlecard>*{background:#16161a;display:inline-block;padding:2px 8px}
+.theater.dither .th-eyebrow,.theater.dither .th-titlecard span{color:#e9e6d6}
+.theater.dither .th-sub{left:50%;right:auto;translate:-50% 0;max-width:84%;background:#16161a;padding:6px 14px}
+.theater.dither .th-sub.in span{animation:subStep .01s calc(var(--delay) + var(--k)*32ms) both}
+@keyframes subStep{from{opacity:0}}
+.theater.dither .th-progress i{background:#e9e6d640}.theater.dither .th-progress i b{background:#e9e6d6}
+.theater.dither .th-end{background:#16161a;color:#e9e6d6}
+.theater.dither .th-end .eyebrow,.theater.dither .th-end-ref{color:#e9e6d6}
+.theater.dither .th-controls button{border-color:#e9e6d6;color:#e9e6d6}.theater.dither #th-count{color:#e9e6d6}
+.ev-thumb canvas{image-rendering:pixelated}
+@media(max-width:580px){.theater.dither .th-sub{translate:none;max-width:none;left:auto}}

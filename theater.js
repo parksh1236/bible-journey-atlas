@@ -30,14 +30,14 @@
       b.onclick = () => open(list().indexOf(e));
       grid.append(b);
       thumbObserver.observe(b.querySelector('canvas'));
-      b.querySelector('canvas')._beat = e.beats[e.beats.length > 2 ? e.beats.length - 1 : 0];
+      b.querySelector('canvas')._beat = e.beats[e.beats.length > 2 ? e.beats.length - 1 : 0]; b.querySelector('canvas')._dither = e.style !== 'color';
     });
     $('ev-count').textContent = `${PEOPLE.find(p => p[0] === who)[1]} · ${shown().length}개의 사건`;
   }
   // 카드 썸네일: 화면에 보일 때 마지막 장면을 한 장 그림
   const thumbObserver = new IntersectionObserver(es => es.forEach(en => {
     if (!en.isIntersecting) return; thumbObserver.unobserve(en.target);
-    const cv = en.target; requestAnimationFrame(() => SceneRenderer.drawBeat(cv.getContext('2d'), cv._beat, .55, 2));
+    const cv = en.target; requestAnimationFrame(() => { const c = cv.getContext('2d', { willReadFrequently: true }); SceneRenderer.drawBeat(c, cv._beat, .55, 2); if (cv._dither) SceneRenderer.dither(c, cv.width, cv.height); });
   }), { rootMargin: '200px' });
 
   function setWho(id) {
@@ -77,6 +77,10 @@
   // ── 극장 (모션그래픽 재생기) ─────────────────────────
   const dlg = $('theater'), cv = $('th-canvas'), g = cv.getContext('2d');
   const prevCv = document.createElement('canvas'), pg = prevCv.getContext('2d');
+  // 디더 스타일용 저해상도 버퍼 (480×270 → 최근접 확대)
+  const mk = () => { const c = document.createElement('canvas'); c.width = 960; c.height = 540; return [c, c.getContext('2d', { willReadFrequently: true })]; };
+  const [small, sg] = mk(), [prevSmall, psg] = mk();
+  const cellHash = (x, y) => ((x * 73856093 ^ y * 19349663) >>> 0) % 1000 / 1000;
   let ev = null, evIdx = 0, beat = 0, beatStart = 0, paused = false, pausedAt = 0, raf = 0, fadeStart = -1e9, ended = false;
   const beatDur = b => reduced ? 1e9 : Math.min(11, Math.max(6, 3.6 + b.text.length * .085)) * 1000;
 
@@ -87,6 +91,7 @@
   function open(idx) {
     evIdx = idx; ev = list()[idx]; if (!ev) return;
     if (!dlg.open) dlg.showModal();
+    dlg.classList.toggle('dither', ev.style !== 'color');
     $('th-eyebrow').textContent = `${ICON[ev.kind]} ${KIND[ev.kind]} · ${ev.place}`;
     $('th-title').textContent = ev.title;
     $('th-ref').textContent = ev.ref;
@@ -104,7 +109,7 @@
     if (!ev) return;
     if (i >= ev.beats.length) return finish();
     if (i < 0) i = 0;
-    if (!first) { pg.clearRect(0, 0, prevCv.width, prevCv.height); pg.drawImage(cv, 0, 0); fadeStart = performance.now(); }
+    if (!first) { pg.clearRect(0, 0, prevCv.width, prevCv.height); pg.drawImage(cv, 0, 0); psg.drawImage(small, 0, 0); fadeStart = performance.now(); }
     beat = i; beatStart = performance.now(); pausedAt = beatStart; ended = false; $('th-end').hidden = true;
     const titleCard = $('th-titlecard'); titleCard.classList.toggle('show', i === 0);
     if (i === 0) { titleCard.classList.remove('anim'); void titleCard.offsetWidth; titleCard.classList.add('anim'); }
@@ -138,9 +143,18 @@
     const b = ev.beats[beat], dur = beatDur(b);
     const el = (paused ? pausedAt : now) - beatStart;
     const p = reduced ? .6 : ended ? 1 : Math.min(1, el / dur);
+    const f = (now - fadeStart) / 900;
+    if (ev.style !== 'color') {
+      const dz = b.dither || {};
+      SceneRenderer.drawBeat(sg, b, p, reduced ? 2 : now / 1000, reduced ? 1 : 2); SceneRenderer.dither(sg, 960, 540, dz.lo, dz.hi, dz.edge);
+      // 블록 디졸브: 16px 칸 단위로 이전 장면이 통째로 바뀜 (회색 섞임 없음)
+      if (f < 1) for (let y = 0; y < 540; y += 32) for (let x = 0; x < 960; x += 32) if (cellHash(x, y) > f) sg.drawImage(prevSmall, x, y, 32, 32, x, y, 32, 32);
+      g.imageSmoothingEnabled = false; g.drawImage(small, 0, 0, cv.width, cv.height);
+      if (!paused && !ended && !reduced && el >= dur) go(beat + 1);
+      return;
+    }
     SceneRenderer.drawBeat(g, b, p, reduced ? 2 : now / 1000);
     // 이전 장면과 부드럽게 겹치며 전환 (빛 번짐 포함)
-    const f = (now - fadeStart) / 900;
     if (f < 1) {
       g.save(); g.globalAlpha = 1 - f; g.drawImage(prevCv, 0, 0); g.restore();
       g.save(); g.globalCompositeOperation = 'screen'; g.fillStyle = `rgba(255,246,228,${Math.sin(f * Math.PI) * .35})`; g.fillRect(0, 0, cv.width, cv.height); g.restore();

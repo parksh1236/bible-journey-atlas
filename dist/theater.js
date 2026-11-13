@@ -30,14 +30,14 @@
       b.onclick = () => open(list().indexOf(e));
       grid.append(b);
       thumbObserver.observe(b.querySelector('canvas'));
-      b.querySelector('canvas')._beat = e.beats[e.beats.length > 2 ? e.beats.length - 1 : 0]; b.querySelector('canvas')._dither = e.style !== 'color';
+      b.querySelector('canvas')._beat = e.beats[e.beats.length > 2 ? e.beats.length - 1 : 0]; b.querySelector('canvas')._dither = e.style !== 'color' && e.style !== 'sketch'; b.querySelector('canvas')._sketch = e.style === 'sketch';
     });
     $('ev-count').textContent = `${PEOPLE.find(p => p[0] === who)[1]} · ${shown().length}개의 사건`;
   }
   // 카드 썸네일: 화면에 보일 때 마지막 장면을 한 장 그림
   const thumbObserver = new IntersectionObserver(es => es.forEach(en => {
     if (!en.isIntersecting) return; thumbObserver.unobserve(en.target);
-    const cv = en.target; requestAnimationFrame(() => { const c = cv.getContext('2d', { willReadFrequently: true }); SceneRenderer.drawBeat(c, cv._beat, .55, 2); if (cv._dither) SceneRenderer.dither(c, cv.width, cv.height); });
+    const cv = en.target; requestAnimationFrame(() => { const c = cv.getContext('2d', { willReadFrequently: true }); SceneRenderer.drawBeat(c, cv._beat, .55, 2); if (cv._dither) SceneRenderer.dither(c, cv.width, cv.height); if (cv._sketch) SceneRenderer.sketch(c, cv.width, cv.height); });
   }), { rootMargin: '200px' });
 
   function setWho(id) {
@@ -91,7 +91,7 @@
   function open(idx) {
     evIdx = idx; ev = list()[idx]; if (!ev) return;
     if (!dlg.open) dlg.showModal();
-    dlg.classList.toggle('dither', ev.style !== 'color');
+    dlg.classList.toggle('dither', ev.style !== 'color' && ev.style !== 'sketch'); dlg.classList.toggle('sketch', ev.style === 'sketch');
     $('th-eyebrow').textContent = `${ICON[ev.kind]} ${KIND[ev.kind]} · ${ev.place}`;
     $('th-title').textContent = ev.title;
     $('th-ref').textContent = ev.ref;
@@ -144,7 +144,11 @@
     const el = (paused ? pausedAt : now) - beatStart;
     const p = reduced ? .6 : ended ? 1 : Math.min(1, el / dur);
     const f = (now - fadeStart) / 900;
-    if (ev.style !== 'color') {
+    let sketched = false;
+    if (ev.style === 'sketch') { // 펜과 담채: 저해상도로 그린 뒤 후처리, 이후 일반 겹침 전환
+      SceneRenderer.drawBeat(sg, b, p, reduced ? 2 : now / 1000, reduced ? 1 : 1.4); SceneRenderer.sketch(sg, 960, 540);
+      g.imageSmoothingEnabled = true; g.drawImage(small, 0, 0, cv.width, cv.height); sketched = true;
+    } else if (ev.style !== 'color') {
       const dz = b.dither || {};
       // 예수님 사건은 3D 장면(scene3d.js), 나머지는 2D 일러스트에 디더
       if (window.Scene3D && (ev.mode === '3d' || (placeEvents.jesus || []).includes(ev))) sg.drawImage(Scene3D.render(b, p, reduced ? 2 : now / 1000), 0, 0);
@@ -155,7 +159,7 @@
       if (!paused && !ended && !reduced && el >= dur) go(beat + 1);
       return;
     }
-    SceneRenderer.drawBeat(g, b, p, reduced ? 2 : now / 1000);
+    if (!sketched) SceneRenderer.drawBeat(g, b, p, reduced ? 2 : now / 1000);
     // 이전 장면과 부드럽게 겹치며 전환 (빛 번짐 포함)
     if (f < 1) {
       g.save(); g.globalAlpha = 1 - f; g.drawImage(prevCv, 0, 0); g.restore();

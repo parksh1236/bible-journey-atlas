@@ -750,5 +750,51 @@ const stoneCol = (pal, d) => mix(depthCol(pal, d), mix(hex('#d9c29a'), pal.light
     }
     g.putImageData(im, 0, 0);
   }
-  window.SceneRenderer = { W, H, drawBeat, dither };
+  // ── 펜과 담채(Urban Sketch): 세피아 펜선 + 어긋난 투명 수채 + 크림색 종이 ──
+  let SK = null;
+  function sketchNoise(w, h) { // 종이 얼룩·종이결·펜 흔들림·선 끊김·가장자리용 고정 노이즈
+    const r = rng(77), n = w * h, grid = (s) => { const gw = Math.ceil(w / s) + 2, gh = Math.ceil(h / s) + 2, a = Float32Array.from({ length: gw * gh }, r); return (x, y) => { const fx = x / s, fy = y / s, ix = fx | 0, iy = fy | 0, tx = fx - ix, ty = fy - iy, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty), i = iy * gw + ix; return (a[i] * (1 - sx) + a[i + 1] * sx) * (1 - sy) + (a[i + gw] * (1 - sx) + a[i + gw + 1] * sx) * sy; }; };
+    const big = grid(120), mid = grid(28), fine = grid(6), wob = grid(18), wob2 = grid(17), gap = grid(40);
+    const o = { mott: new Float32Array(n), tooth: new Float32Array(n), wx: new Int8Array(n), wy: new Int8Array(n), gap: new Float32Array(n), edge: new Float32Array(n), w, h };
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const k = y * w + x;
+      o.mott[k] = big(x, y) * .6 + mid(x, y) * .4; o.tooth[k] = fine(x, y) * .6 + r() * .4;
+      o.wx[k] = Math.round((wob(x, y) - .5) * 3); o.wy[k] = Math.round((wob2(x, y) - .5) * 3);
+      o.gap[k] = gap(x, y) > .78 ? 0 : 1;
+      // 그림이 종이 가장자리에서 흩어지는 경계 (가장자리일수록 0)
+      const ex = Math.min(x, w - 1 - x) / w, ey = Math.min(y, h - 1 - y) / h, e = Math.min(ex * 1.6, ey * 2.2) + (mid((x * 1.7) % w, (y * 1.7) % h) - .5) * .09;
+      o.edge[k] = clamp((e - .03) / .07);
+    }
+    return o;
+  }
+  function sketch(g, w, h) {
+    if (!SK || SK.w !== w) SK = sketchNoise(w, h);
+    const im = g.getImageData(0, 0, w, h), d = im.data, n = w * h, src = new Uint8ClampedArray(d), L = new Float32Array(n);
+    for (let k = 0, i = 0; k < n; k++, i += 4) L[k] = (src[i] * .299 + src[i + 1] * .587 + src[i + 2] * .114) / 255;
+    const P = [239, 231, 214], INKC = [59, 42, 30], VIO = [120, 112, 150];
+    for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+      const k = y * w + x, i = k * 4, e = SK.edge[k];
+      // 담채: 원본 색을 선보다 2px 어긋나게 가져와 밝고 맑게, 그림자는 보랏빛 회색 쪽으로
+      const kx = Math.max(0, Math.min(w - 1, x - 2)), ky = Math.max(0, Math.min(h - 1, y - 1)), j = (ky * w + kx) * 4, l = L[ky * w + kx];
+      let cr = src[j], cg = src[j + 1], cb = src[j + 2];
+      { const m = (cr + cg + cb) / 3; cr = m + (cr - m) * 1.6; cg = m + (cg - m) * 1.6; cb = m + (cb - m) * 1.6; } // 채도를 올려 수채 고유색이 살아나게
+      const sh = Math.max(0, .45 - l) * .7; cr += (VIO[0] - cr) * sh; cg += (VIO[1] - cg) * sh; cb += (VIO[2] - cb) * sh;
+      const lift = .3; cr += (255 - cr) * lift; cg += (255 - cg) * lift; cb += (255 - cb) * lift;
+      // 밝은 곳은 종이를 남겨 둠(리저브), 물감 농도는 얼룩 노이즈로 들쭉날쭉
+      let a = (l > .86 ? 0 : .62) * (.75 + .5 * SK.mott[k]) * e;
+      const q = Math.round(l * 5), qn = Math.round(L[ky * w + Math.min(w - 1, kx + 2)] * 5);
+      if (q !== qn) a = Math.min(1, a * 1.5); // 마른 가장자리: 물감이 고여 진함
+      const gr = .82 + .36 * SK.tooth[k];
+      let or = P[0] * (1 - a + a * cr / 255 * gr), og = P[1] * (1 - a + a * cg / 255 * gr), ob = P[2] * (1 - a + a * cb / 255 * gr);
+      // 펜선: 흔들린 위치에서 밝기 경계(Sobel)를 찾아 세피아 선으로
+      const xx = Math.max(1, Math.min(w - 2, x + SK.wx[k])), yy = Math.max(1, Math.min(h - 2, y + SK.wy[k])), m = yy * w + xx;
+      const gx = L[m - w + 1] + 2 * L[m + 1] + L[m + w + 1] - L[m - w - 1] - 2 * L[m - 1] - L[m + w - 1];
+      const gy = L[m + w - 1] + 2 * L[m + w] + L[m + w + 1] - L[m - w - 1] - 2 * L[m - w] - L[m - w + 1];
+      const mag = Math.sqrt(gx * gx + gy * gy), ink = clamp((mag - .22) / .25) * SK.gap[k] * Math.min(1, e * 1.4) * .96;
+      or += (INKC[0] - or) * ink; og += (INKC[1] - og) * ink; ob += (INKC[2] - ob) * ink;
+      const t = .95 + .05 * SK.tooth[k]; d[i] = or * t; d[i + 1] = og * t; d[i + 2] = ob * t;
+    }
+    g.putImageData(im, 0, 0);
+  }
+  window.SceneRenderer = { W, H, drawBeat, dither, sketch };
 })();

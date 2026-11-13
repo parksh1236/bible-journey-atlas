@@ -219,3 +219,13 @@ figure{overflow:hidden}figure img{transition:transform 1.2s cubic-bezier(.2,.8,.
 @media(max-width:580px){.theater.dither .th-sub{translate:none;max-width:none;left:auto}}
 /* 자막을 우측 상단으로 (그림을 가리지 않게) */
 @media(min-width:581px){.theater.dither .th-sub{left:auto;right:3%;top:9%;bottom:auto;translate:none;max-width:38%;text-align:left;font-size:clamp(13px,1.5vw,18px);line-height:1.65}}
+/* 펜과 담채 스타일: 크림색 스케치북 + 세피아 손글씨풍 자막(우측 상단 여백) */
+.theater.sketch,.theater.sketch .th-stage{background:#efe7d6}
+.theater.sketch .th-titlecard,.theater.sketch .th-sub{color:#3b2a1e;text-shadow:none}
+.theater.sketch .th-eyebrow,.theater.sketch .th-titlecard span{color:#6a4e38}
+.theater.sketch .th-sub{font-style:italic}
+@media(min-width:581px){.theater.sketch .th-sub{left:auto;right:4%;top:9%;bottom:auto;max-width:36%;text-align:left;font-size:clamp(13px,1.5vw,18px);background:#efe7d6e0;padding:6px 12px}}
+.theater.sketch .th-progress i{background:#3b2a1e30}.theater.sketch .th-progress i b{background:#3b2a1e}
+.theater.sketch .th-end{background:linear-gradient(90deg,#efe7d6f5,#efe7d6c0 70%,#efe7d640);color:#3b2a1e}
+.theater.sketch .th-end .eyebrow,.theater.sketch .th-end-ref{color:#6a4e38}
+.theater.sketch .th-end-actions button{border-color:#3b2a1e60;background:transparent;color:#3b2a1e}

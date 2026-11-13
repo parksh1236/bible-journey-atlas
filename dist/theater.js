@@ -30,7 +30,7 @@
       b.onclick = () => open(list().indexOf(e));
       grid.append(b);
       thumbObserver.observe(b.querySelector('canvas'));
-      b.querySelector('canvas')._beat = e.beats[e.beats.length > 2 ? e.beats.length - 1 : 0]; b.querySelector('canvas')._dither = e.style !== 'color' && e.style !== 'sketch'; b.querySelector('canvas')._sketch = e.style === 'sketch';
+      b.querySelector('canvas')._beat = e.beats[e.beats.length > 2 ? e.beats.length - 1 : 0]; b.querySelector('canvas')._dither = e.style === 'dither'; b.querySelector('canvas')._sketch = (e.style || 'sketch') === 'sketch';
     });
     $('ev-count').textContent = `${PEOPLE.find(p => p[0] === who)[1]} · ${shown().length}개의 사건`;
   }
@@ -91,7 +91,7 @@
   function open(idx) {
     evIdx = idx; ev = list()[idx]; if (!ev) return;
     if (!dlg.open) dlg.showModal();
-    dlg.classList.toggle('dither', ev.style !== 'color' && ev.style !== 'sketch'); dlg.classList.toggle('sketch', ev.style === 'sketch');
+    dlg.classList.toggle('dither', ev.style === 'dither'); dlg.classList.toggle('sketch', (ev.style || 'sketch') === 'sketch');
     $('th-eyebrow').textContent = `${ICON[ev.kind]} ${KIND[ev.kind]} · ${ev.place}`;
     $('th-title').textContent = ev.title;
     $('th-ref').textContent = ev.ref;
@@ -145,10 +145,10 @@
     const p = reduced ? .6 : ended ? 1 : Math.min(1, el / dur);
     const f = (now - fadeStart) / 900;
     let sketched = false;
-    if (ev.style === 'sketch') { // 펜과 담채: 저해상도로 그린 뒤 후처리, 이후 일반 겹침 전환
+    if ((ev.style || 'sketch') === 'sketch') { // 펜과 담채: 저해상도로 그린 뒤 후처리, 이후 일반 겹침 전환
       SceneRenderer.drawBeat(sg, b, p, reduced ? 2 : now / 1000, reduced ? 1 : 1.4); SceneRenderer.sketch(sg, 960, 540);
       g.imageSmoothingEnabled = true; g.drawImage(small, 0, 0, cv.width, cv.height); sketched = true;
-    } else if (ev.style !== 'color') {
+    } else if (ev.style === 'dither') {
       const dz = b.dither || {};
       // 예수님 사건은 3D 장면(scene3d.js), 나머지는 2D 일러스트에 디더
       if (window.Scene3D && (ev.mode === '3d' || (placeEvents.jesus || []).includes(ev))) sg.drawImage(Scene3D.render(b, p, reduced ? 2 : now / 1000), 0, 0);

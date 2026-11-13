@@ -397,7 +397,7 @@
 
     jesus: [
       {
-        id: 'cana', style: 'sketch', place: '가나', lon: 35.34, lat: 32.75, kind: 'miracle', title: '물이 포도주가 되다', ref: '요한복음 2:1–11', note: '가나의 정확한 위치는 여러 후보지가 있습니다.',
+        id: 'cana', place: '가나', lon: 35.34, lat: 32.75, kind: 'miracle', title: '물이 포도주가 되다', ref: '요한복음 2:1–11', note: '가나의 정확한 위치는 여러 후보지가 있습니다.',
         summary: '갈릴리 가나의 혼인 잔치에 포도주가 떨어지자, 예수님은 하인들에게 돌항아리 여섯 개에 물을 채우게 하십니다. 떠서 가져간 물은 좋은 포도주가 되었고, 요한복음은 이를 첫 표적이라 기록합니다.',
         beats: [
           { sky: 'sunset', text: '갈릴리 가나의 혼인 잔치. 마을은 축하의 노래로 가득합니다.', layers: [hills(.6, .2, 40, .08), { type: 'city', x: .5, w: .8, y: .72, depth: .5, seed: 40, lights: true }, { type: 'crowd', x: .5, w: .9, y: .9, n: 34, s: .55, depth: .92, raise: [.2, .5] }], fx: [{ type: 'rays' }, { type: 'motes', n: 50, color: '#ffd59a' }] },

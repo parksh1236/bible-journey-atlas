@@ -146,7 +146,9 @@
     const f = (now - fadeStart) / 900;
     if (ev.style !== 'color') {
       const dz = b.dither || {};
-      SceneRenderer.drawBeat(sg, b, p, reduced ? 2 : now / 1000, reduced ? 1 : 2); SceneRenderer.dither(sg, 960, 540, dz.lo, dz.hi, dz.edge);
+      // 예수님 사건은 3D 장면(scene3d.js), 나머지는 2D 일러스트에 디더
+      if (window.Scene3D && (ev.mode === '3d' || (placeEvents.jesus || []).includes(ev))) sg.drawImage(Scene3D.render(b, p, reduced ? 2 : now / 1000), 0, 0);
+      else { SceneRenderer.drawBeat(sg, b, p, reduced ? 2 : now / 1000, reduced ? 1 : 2); SceneRenderer.dither(sg, 960, 540, dz.lo, dz.hi, dz.edge); }
       // 블록 디졸브: 16px 칸 단위로 이전 장면이 통째로 바뀜 (회색 섞임 없음)
       if (f < 1) for (let y = 0; y < 540; y += 32) for (let x = 0; x < 960; x += 32) if (cellHash(x, y) > f) sg.drawImage(prevSmall, x, y, 32, 32, x, y, 32, 32);
       g.imageSmoothingEnabled = false; g.drawImage(small, 0, 0, cv.width, cv.height);

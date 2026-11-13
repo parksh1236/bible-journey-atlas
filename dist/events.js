@@ -402,8 +402,8 @@
         beats: [
           { sky: 'sunset', text: '갈릴리 가나의 혼인 잔치. 마을은 축하의 노래로 가득합니다.', layers: [hills(.6, .2, 40, .08), { type: 'city', x: .5, w: .8, y: .72, depth: .5, seed: 40, lights: true }, { type: 'crowd', x: .5, w: .9, y: .9, n: 34, s: .55, depth: .92, raise: [.2, .5] }], fx: [{ type: 'rays' }, { type: 'motes', n: 50, color: '#ffd59a' }] },
           { sky: 'dusk', text: '그런데 잔치가 한창일 때 포도주가 떨어지고 맙니다.', layers: [hills(.6, .2, 40, .08), { type: 'city', x: .5, w: .8, y: .72, depth: .5, seed: 40, lights: true }, { type: 'figure', x: .38, y: .9, s: 1.25, depth: .94, veil: true }, jesus(.55, .9)], fx: [{ type: 'motes', n: 30 }] },
-          { sky: 'dusk', text: '예수님은 하인들에게 돌항아리 여섯 개에 물을 아귀까지 채우라고 하십니다.', layers: [hills(.62, .2, 40, .08), { type: 'jars', x: .55, y: .9, s: 1.1, depth: .9, wine: 0 }, jesus(.18, .92)], fx: [{ type: 'motes', n: 30 }] },
-          { sky: 'dusk', skyTo: 'sunset', text: '떠서 가져간 물은 가장 좋은 포도주가 되어 있었습니다. 예수님이 행하신 첫 표적입니다.', layers: [hills(.62, .2, 40, .08), { type: 'jars', x: .55, y: .9, s: 1.1, depth: .9, wine: [.05, .7] }, jesus(.18, .92, { glow: 1 })], fx: [{ type: 'glow', x: .55, y: .78, r: .3, on: [.1, .7], color: '#ffb0c0' }, { type: 'motes', n: 70, color: '#ffc7d2' }] },
+          { sky: 'dusk', text: '예수님은 하인들에게 돌항아리 여섯 개에 물을 아귀까지 채우라고 하십니다.', layers: [hills(.62, .2, 40, .08), { type: 'jars', x: .55, y: .78, s: 1.1, depth: .9, wine: 0 }, jesus(.18, .92)], fx: [{ type: 'motes', n: 30 }] },
+          { sky: 'dusk', skyTo: 'sunset', text: '떠서 가져간 물은 가장 좋은 포도주가 되어 있었습니다. 예수님이 행하신 첫 표적입니다.', layers: [hills(.62, .2, 40, .08), { type: 'jars', x: .55, y: .78, s: 1.1, depth: .9, wine: [.05, .7] }, jesus(.18, .92, { glow: 1 })], fx: [{ type: 'glow', x: .55, y: .66, r: .3, on: [.1, .7], color: '#ffb0c0' }, { type: 'motes', n: 70, color: '#ffc7d2' }] },
         ],
       },
       {

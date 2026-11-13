@@ -662,7 +662,7 @@ const stoneCol = (pal, d) => mix(depthCol(pal, d), mix(hex('#d9c29a'), pal.light
     const gr = g.createLinearGradient(0, 0, 0, H * .8); for (const [k, c] of s.stops) gr.addColorStop(k, c);
     g.fillStyle = gr; g.fillRect(0, 0, W, H); g.restore();
   }
-  function drawBeat(g, beat, p, t) {
+  function drawBeat(g, beat, p, t, boost = 1) {
     const c = cacheOf(beat);
     let pal = palette(beat.sky);
     let k2 = 0;
@@ -672,7 +672,8 @@ const stoneCol = (pal, d) => mix(depthCol(pal, d), mix(hex('#d9c29a'), pal.light
     if (!pal.sun && beat.skyTo && SKY[beat.skyTo].sun && k2 > 0 && beat.sun === undefined) pal.sun = SKY[beat.skyTo].sun;
 
     // 카메라: 아주 천천히 다가가며 옆으로 흐름 (Ken Burns)
-    const cam = beat.cam || {}, zoom = lerp(cam.z0 ?? 1.02, cam.z1 ?? 1.1, ease(p)), panX = lerp(cam.x0 ?? -20, cam.x1 ?? 20, p), panY = lerp(cam.y0 ?? 0, cam.y1 ?? -8, p);
+    // boost: 시차·카메라 이동 폭 배율 (입체감 강조)
+    const cam = beat.cam || {}, zoom = 1 + (lerp(cam.z0 ?? 1.02, cam.z1 ?? 1.1, ease(p)) - 1) * boost, panX = lerp(cam.x0 ?? -20, cam.x1 ?? 20, ease(p)) * boost, panY = lerp(cam.y0 ?? 0, cam.y1 ?? -8, ease(p)) * boost;
     let shake = 0; (beat.fx || []).forEach(f => { if (f.type === 'shake') shake = Math.max(shake, val(f.on, p, 1) * (f.amp ?? 10)); });
     const sx = shake ? Math.sin(t * 61) * shake : 0, sy = shake ? Math.cos(t * 47) * shake : 0;
     const scale = g.canvas.width / W;
@@ -727,5 +728,27 @@ const stoneCol = (pal, d) => mix(depthCol(pal, d), mix(hex('#d9c29a'), pal.light
     g.restore();
   }
 
-  window.SceneRenderer = { W, H, drawBeat };
+  // 1-bit 디더: 밝기 → 대비 곡선 → 8×8 Bayer 임계값 비교 → 잉크/종이 두 색만 남김
+  const BAYER = [0,32,8,40,2,34,10,42,48,16,56,24,50,18,58,26,12,44,4,36,14,46,6,38,60,28,52,20,62,30,54,22,3,35,11,43,1,33,9,41,51,19,59,27,49,17,57,25,15,47,7,39,13,45,5,37,63,31,55,23,61,29,53,21];
+  const INK = [22, 22, 26], PAPER = [233, 230, 214];
+  let Lbuf = null;
+  // lo/hi: 이 밝기 아래는 완전한 잉크, 위는 완전한 종이 (lo를 올리면 실루엣이 더 진해짐)
+  // edge: 밝기가 급히 끊기는 곳(물체 경계)에 1px 윤곽선 → 입체 장면처럼 보이게
+  function dither(g, w, h, lo = .22, hi = .78, edge = .16) {
+    const im = g.getImageData(0, 0, w, h), d = im.data, n = w * h;
+    if (!Lbuf || Lbuf.length !== n) Lbuf = new Float32Array(n);
+    const L = Lbuf;
+    for (let k = 0, i = 0; k < n; k++, i += 4) { let l = (d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114) / 255; l = Math.min(1, Math.max(0, (l - lo) / (hi - lo))); L[k] = l * l * (3 - 2 * l); }
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const k = y * w + x, i = k * 4, l = L[k];
+      let c = l > (BAYER[(y & 7) * 8 + (x & 7)] + .5) / 64 ? PAPER : INK;
+      if (edge && x > 0 && y > 0 && x < w - 1 && y < h - 1) {
+        const gx = L[k + 1] - L[k - 1], gy = L[k + w] - L[k - w];
+        if (gx * gx + gy * gy > edge * edge) c = l > .5 ? INK : PAPER; // 밝은 면엔 잉크선, 어두운 면엔 종이선(림)
+      }
+      d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2];
+    }
+    g.putImageData(im, 0, 0);
+  }
+  window.SceneRenderer = { W, H, drawBeat, dither };
 })();
